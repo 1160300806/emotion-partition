@@ -4,6 +4,7 @@ from gensim import corpora, models
 import gensim
 import random
 from sklearn.neural_network import MLPClassifier
+LAYER_SIZE = (5, 2)
 
 
 def genData():
@@ -74,24 +75,6 @@ def genTestList(dictionary, TestList):
     return ans
 
 
-TestList = genTestList(dictionary, TestList)
-bow_corpus = [dictionary.doc2bow(text) for text in TrainList]
-tf_idf = models.TfidfModel(bow_corpus)
-TF_Corpus = tf_idf[bow_corpus]
-
-matrix = gensim.matutils.corpus2dense(TF_Corpus, len(dictionary)).T
-clf = MLPClassifier(
-    solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
-clf.fit(matrix, TrainPosList)
-
-test_corpus = [dictionary.doc2bow(txt) for txt in TestList]
-test_TFIDF = tf_idf[test_corpus]
-
-test_matrix = gensim.matutils.corpus2dense(test_TFIDF, len(dictionary)).T
-
-test_ans = clf.predict(test_matrix)
-
-
 def cmp(l1, l2):
     for i1, i2 in zip(l1, l2):
         if i1 != i2:
@@ -110,4 +93,50 @@ def judge(ans, TestPosList):
     return correct / cnt
 
 
+TestList = genTestList(dictionary, TestList)
+bow_corpus = [dictionary.doc2bow(text) for text in TrainList]
+tf_idf = models.TfidfModel(bow_corpus)
+TF_Corpus = tf_idf[bow_corpus]
+
+matrix = gensim.matutils.corpus2dense(bow_corpus, len(dictionary)).T
+
+clf_1 = MLPClassifier(
+    solver='lbfgs', alpha=1e-5, hidden_layer_sizes=LAYER_SIZE, random_state=1)
+#    max_iter=1,
+#    warm_start=True)
+test_corpus = [dictionary.doc2bow(txt) for txt in TestList]
+test_matrix = gensim.matutils.corpus2dense(test_corpus, len(dictionary)).T
+print(test_matrix.shape)
+print("BOW:")
+'''
+for i in range(100):
+    print("epoch:" + str(i))
+    clf_1.fit(matrix, TrainPosList)
+    test_ans = clf_1.predict(test_matrix)
+    print(judge(test_ans, TestPosList))
+'''
+clf_1.fit(matrix, TrainPosList)
+test_ans = clf_1.predict(test_matrix)
+print(judge(test_ans, TestPosList))
+matrix = gensim.matutils.corpus2dense(TF_Corpus, len(dictionary)).T
+
+clf_2 = MLPClassifier(
+    solver='lbfgs', alpha=1e-5, hidden_layer_sizes=LAYER_SIZE, random_state=1)
+#    max_iter=1,
+#   warm_start=True)
+
+test_tf_idf = models.TfidfModel(test_corpus)
+test_TFIDF = test_tf_idf[test_corpus]
+
+test_matrix = gensim.matutils.corpus2dense(test_TFIDF, len(dictionary)).T
+print("TF-IDF")
+'''
+for i in range(300):
+    print("epoch:" + str(i))
+    clf_2.fit(matrix, TrainPosList)
+    test_ans = clf_2.predict(test_matrix)
+    print(judge(test_ans, TestPosList))
+'''
+clf_2.fit(matrix, TrainPosList)
+test_ans = clf_2.predict(test_matrix)
 print(judge(test_ans, TestPosList))
