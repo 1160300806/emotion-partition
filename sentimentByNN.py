@@ -129,7 +129,7 @@ test_tf_idf = models.TfidfModel(test_corpus)
 test_TFIDF = test_tf_idf[test_corpus]
 
 test_matrix = gensim.matutils.corpus2dense(test_TFIDF, len(dictionary)).T
-print("TF-IDF")
+print("TF-IDF:")
 '''
 for i in range(300):
     print("epoch:" + str(i))
